@@ -1,0 +1,44 @@
+{
+  "cadastro_aluno": {
+"dados_pessoais": [
+      {"nome": "nome_completo", "label": "Nome Completo", "tipo": "text", "obrigatorio": true},
+      {"nome": "data_nascimento", "label": "Data de Nascimento", "tipo": "date", "obrigatorio": true},
+      {"nome": "genero", "label": "Gênero", "tipo": "selectbox", "opcoes": ["Masculino", "Feminino", "Outro", "Prefiro não informar"], "obrigatorio": true},
+      {"nome": "rg", "label": "RG", "tipo": "text", "obrigatorio": false},
+      {"nome": "cpf", "label": "CPF", "tipo": "text", "obrigatorio": false}
+    ],
+    "escolaridade": [
+      {"nome": "nome_escola", "label": "Nome da Escola", "tipo": "text", "obrigatorio": true},
+      {"nome": "serie", "label": "Série", "tipo": "text", "obrigatorio": true},
+      {"nome": "periodo", "label": "Período", "tipo": "selectbox", "opcoes": ["Manhã", "Tarde", "Noite", "Integral"], "obrigatorio": true}
+    ],
+    "saude": [
+      {"nome": "altura", "label": "Altura (m)", "tipo": "number", "obrigatorio": false},
+      {"nome": "peso", "label": "Peso (kg)", "tipo": "number", "obrigatorio": false},
+      {"nome": "medicacao_continua", "label": "Faz uso de alguma medicação contínua?", "tipo": "radio_com_detalhe", "obrigatorio": true},
+      {"nome": "cirurgia", "label": "Já fez alguma cirurgia?", "tipo": "radio_com_detalhe", "obrigatorio": true},
+      {"nome": "doenca", "label": "Já teve alguma doença grave?", "tipo": "radio_com_detalhe", "obrigatorio": true}
+    ],
+    "familia": [
+      {"nome": "cep", "label": "CEP", "tipo": "text", "obrigatorio": true},
+      {"nome": "endereco", "label": "Endereço", "tipo": "text", "obrigatorio": true},
+      {"nome": "numero", "label": "Número", "tipo": "text", "obrigatorio": true},
+      {"nome": "bairro", "label": "Bairro", "tipo": "text", "obrigatorio": true},
+      {"nome": "renda_familiar", "label": "Renda Familiar (R$)", "tipo": "number", "obrigatorio": true}
+    ],
+    "responsaveis": [
+      {"nome": "nome_resp1", "label": "Nome do Responsável 1", "tipo": "text", "obrigatorio": true},
+      {"nome": "parentesco_resp1", "label": "Parentesco (Ex: Mãe, Avó)", "tipo": "text", "obrigatorio": true},
+      {"nome": "contato_resp1", "label": "Telefone/WhatsApp", "tipo": "text", "obrigatorio": true},
+      {"nome": "nome_resp2", "label": "Nome do Responsável 2", "tipo": "text", "obrigatorio": false},
+      {"nome": "parentesco_resp2", "label": "Parentesco (Ex: Pai, Tio)", "tipo": "text", "obrigatorio": false},
+      {"nome": "contato_resp2", "label": "Telefone/WhatsApp", "tipo": "text", "obrigatorio": false}
+    ],
+    "social": [
+      {"nome": "como_conheceu", "label": "Como conheceu a Ágape?", "tipo": "text", "obrigatorio": true},
+      {"nome": "motivo_matricula", "label": "Por qual motivo você escolheu matricular a criança na Ágape?", "tipo": "textarea", "obrigatorio": true},
+      {"nome": "beneficio_social", "label": "Recebe algum benefício social?", "tipo": "radio_com_detalhe", "obrigatorio": true},
+      {"nome": "vulnerabilidades", "label": "Vulnerabilidades mapeadas", "tipo": "multiselect", "opcoes": ["Nenhuma", "1 - Situação de isolamento", "2 - Trabalho infantil", "3 - Vivência de violência e/ou negligência", "4 - Fora da escola ou com defasagem escolar"], "obrigatorio": true}
+    ]
+  }
+}
