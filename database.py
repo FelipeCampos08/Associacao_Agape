@@ -62,5 +62,16 @@ class Matricula(Base):
     aluno = relationship("Aluno", back_populates="matriculas")
     turma = relationship("Turma", back_populates="matriculas")
 
+class Usuario(Base):
+    __tablename__ = 'usuarios'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nome = Column(String, nullable=False)
+    email = Column(String, nullable=False, unique=True)
+    senha = Column(String, nullable=False)
+    
+    # NOVO: Define se o usuário tem privilégios de administrador
+    is_admin = Column(Boolean, default=False, nullable=False)
+
 # Comando para criar as tabelas
 Base.metadata.create_all(engine)

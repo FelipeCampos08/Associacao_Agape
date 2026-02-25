@@ -3,6 +3,13 @@ from datetime import date
 from database import SessionLocal, Aluno, Projeto, Turma, Matricula
 
 st.set_page_config(page_title="Matrículas", page_icon="📝")
+
+# --- PROTEÇÃO DE ACESSO ---
+if "autenticado" not in st.session_state or not st.session_state.autenticado:
+    st.warning("⚠️ Você precisa fazer login para acessar esta página.")
+    st.stop() # Interrompe a leitura do código aqui e bloqueia a tela
+# --------------------------
+
 st.title("Matrícula de Alunos")
 
 db = SessionLocal()

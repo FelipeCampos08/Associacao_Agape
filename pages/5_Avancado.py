@@ -1,17 +1,21 @@
 import streamlit as st
 import json
 import datetime
-from database import SessionLocal, Aluno, Projeto, Turma, Matricula
+import bcrypt
+from database import SessionLocal, Aluno, Projeto, Turma, Matricula, Usuario
 
 st.set_page_config(page_title="Avançado e Edição", page_icon="⚙️", layout="wide")
-st.title("⚙️ Administração Avançada")
-st.write("Área restrita para edição de dados, exclusão e gestão de matrículas.")
 
-# --- SISTEMA DE MENSAGENS DE SUCESSO ---
-# Verifica se existe uma mensagem de sucesso na memória para exibir após o recarregamento da tela
+if "autenticado" not in st.session_state or not st.session_state.autenticado:
+    st.warning("⚠️ Precisa de iniciar sessão para aceder a esta página.")
+    st.stop()
+
+st.title("⚙️ Administração Avançada")
+st.write("Área restrita para edição de dados, eliminação e gestão de matrículas.")
+
 if "mensagem_sucesso" in st.session_state:
     st.success(st.session_state.mensagem_sucesso)
-    del st.session_state.mensagem_sucesso  # Apaga a mensagem para não aparecer de novo depois
+    del st.session_state.mensagem_sucesso
 
 db = SessionLocal()
 
@@ -21,9 +25,16 @@ def carregar_campos():
         return json.load(f)["cadastro_aluno"]
 
 try:
-    aba_status, aba_desmatricular, aba_editar_aluno, aba_editar_proj, aba_excluir = st.tabs([
-        "🔄 Status", "❌ Desmatricular", "✏️ Editar Aluno", "✏️ Editar Projetos/Turmas", "🗑️ Excluir Registros"
-    ])
+    # --- LÓGICA DE ABAS DINÂMICAS (Oculta a aba de usuários para quem não é Admin) ---
+    nomes_abas = ["🔄 Estado", "❌ Desmatricular", "✏️ Editar Aluno", "✏️ Editar Projetos", "🗑️ Eliminar Registos"]
+    
+    eh_admin = st.session_state.get("is_admin", False)
+    if eh_admin:
+        nomes_abas.append("👥 Gerir Utilizadores (Admin)")
+
+    abas = st.tabs(nomes_abas)
+    
+    aba_status, aba_desmatricular, aba_editar_aluno, aba_editar_proj, aba_excluir = abas[:5]
 
     # ==========================================
     # ABA 1: STATUS DO ALUNO (Ativo/Inativo)
@@ -282,6 +293,85 @@ try:
                                 db.commit()
                                 st.session_state.mensagem_sucesso = "Turma excluída com sucesso."
                                 st.rerun()
+
+    # ==========================================
+    # ABA 6: GERIR UTILIZADORES (APENAS ADMIN)
+    # ==========================================
+    if eh_admin:
+        aba_usuarios = abas[5]
+        with aba_usuarios:
+            st.header("Gestão de Acessos da Equipa")
+            st.write("Controle exclusivo para Administradores.")
+            st.markdown("---")
+            
+            # Dividimos em 3 colunas para acomodar a nova função de resetar senha
+            col_add, col_reset, col_del = st.columns(3)
+            
+            with col_add:
+                st.subheader("➕ Adicionar Utilizador")
+                with st.form("form_novo_usuario"):
+                    novo_nome = st.text_input("Nome Completo")
+                    novo_email = st.text_input("E-mail")
+                    nova_senha = st.text_input("Palavra-passe provisória", type="password")
+                    
+                    # Permite escolher se o novo funcionário também será admin
+                    novo_perfil = st.selectbox("Perfil de Acesso", ["Comum", "Administrador"])
+                    
+                    btn_criar_user = st.form_submit_button("Criar Utilizador", type="primary")
+                    
+                    if btn_criar_user:
+                        if not novo_nome or not novo_email or not nova_senha:
+                            st.error("⚠️ Preencha todos os campos.")
+                        elif db.query(Usuario).filter(Usuario.email == novo_email).first():
+                            st.error("❌ Este e-mail já existe no sistema.")
+                        else:
+                            senha_hash = bcrypt.hashpw(nova_senha.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                            is_adm = True if novo_perfil == "Administrador" else False
+                            
+                            novo_user = Usuario(nome=novo_nome, email=novo_email, senha=senha_hash, is_admin=is_adm)
+                            db.add(novo_user)
+                            db.commit()
+                            st.session_state.mensagem_sucesso = f"Usuário {novo_nome} criado com sucesso!"
+                            st.rerun()
+
+            with col_reset:
+                st.subheader("🔑 Redefinir Senha")
+                usuarios_db = db.query(Usuario).all()
+                opcoes_users_reset = {u.id: f"{u.nome} ({u.email})" for u in usuarios_db}
+                
+                with st.form("form_reset_senha"):
+                    user_id_reset = st.selectbox("Selecione o usuário:", options=list(opcoes_users_reset.keys()), format_func=lambda x: opcoes_users_reset[x])
+                    senha_recuperacao = st.text_input("Digite a nova palavra-passe", type="password")
+                    btn_reset = st.form_submit_button("Salvar Nova Senha")
+                    
+                    if btn_reset:
+                        if not senha_recuperacao:
+                            st.error("⚠️ Digite uma nova senha.")
+                        else:
+                            user_para_reset = db.query(Usuario).filter(Usuario.id == user_id_reset).first()
+                            senha_hash_nova = bcrypt.hashpw(senha_recuperacao.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                            user_para_reset.senha = senha_hash_nova
+                            db.commit()
+                            st.session_state.mensagem_sucesso = f"Senha de {user_para_reset.nome} redefinida com sucesso!"
+                            st.rerun()
+                            
+            with col_del:
+                st.subheader("🗑️ Remover Acesso")
+                usuarios_removiveis = [u for u in usuarios_db if u.email != st.session_state.get("email_usuario")]
+                
+                if not usuarios_removiveis:
+                    st.info("Não existem outros utilizadores no sistema além de si.")
+                else:
+                    opcoes_users_del = {u.id: f"{u.nome} ({u.email})" for u in usuarios_removiveis}
+                    user_id_del = st.selectbox("Selecione a pessoa a remover:", options=list(opcoes_users_del.keys()), format_func=lambda x: opcoes_users_del[x])
+                    
+                    with st.popover("Remover Acesso"):
+                        st.error("⚠️ **ATENÇÃO:** O acesso será revogado imediatamente.")
+                        if st.button("Sim, Remover", type="primary"):
+                            db.query(Usuario).filter(Usuario.id == user_id_del).delete()
+                            db.commit()
+                            st.session_state.mensagem_sucesso = "Acesso revogado com sucesso!"
+                            st.rerun()
 
 finally:
     db.close()

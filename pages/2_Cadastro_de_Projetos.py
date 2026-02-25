@@ -3,6 +3,13 @@ import datetime
 from database import SessionLocal, Projeto, Turma
 
 st.set_page_config(page_title="Gestão de Projetos e Turmas", page_icon="⚽", layout="wide")
+
+# --- PROTEÇÃO DE ACESSO ---
+if "autenticado" not in st.session_state or not st.session_state.autenticado:
+    st.warning("⚠️ Você precisa fazer login para acessar esta página.")
+    st.stop() # Interrompe a leitura do código aqui e bloqueia a tela
+# --------------------------
+
 st.title("Gestão de Projetos e Turmas")
 st.write("Cadastre novos projetos no catálogo ou abra novas turmas para projetos já existentes (Ciclo Anual).")
 
