@@ -99,41 +99,43 @@ try:
 
             st.markdown("---")
             for categoria, campos in config.items():
-                st.subheader(categoria.replace("_", " ").title())
-                for campo in campos:
+                st.markdown(f"#### {categoria.replace('_', ' ').title()}")
+                cols = st.columns(2)
+                
+                for index, campo in enumerate(campos):
                     nome = campo["nome"]
                     tipo = campo["tipo"]
                     label = campo["label"]
                     valor_atual = dados_atuais.get(nome)
-                    
                     key = f"edit_aluno_{nome}_{aluno_edit_id}"
                     
-                    if tipo == "text":
-                        novas_respostas[nome] = st.text_input(label, value=valor_atual if valor_atual else "", key=key)
-                    elif tipo == "date":
-                        try:
-                            d_atual = datetime.datetime.strptime(valor_atual, "%Y-%m-%d").date() if valor_atual else datetime.date.today()
-                        except:
-                            d_atual = datetime.date.today()
-                        novas_respostas[nome] = st.date_input(label, value=d_atual, min_value=datetime.date(1990, 1, 1), max_value=datetime.date.today(), key=key)
-                    elif tipo == "number":
-                        novas_respostas[nome] = st.number_input(label, value=float(valor_atual) if valor_atual else 0.0, step=0.1, key=key)
-                    elif tipo == "selectbox":
-                        opcoes = campo.get("opcoes", [])
-                        idx = opcoes.index(valor_atual) if valor_atual in opcoes else 0
-                        novas_respostas[nome] = st.selectbox(label, options=opcoes, index=idx, key=key)
-                    elif tipo == "multiselect":
-                        opcoes = campo.get("opcoes", [])
-                        val_sel = valor_atual if isinstance(valor_atual, list) else []
-                        novas_respostas[nome] = st.multiselect(label, options=opcoes, default=val_sel, key=key)
-                    elif tipo == "textarea":
-                        novas_respostas[nome] = st.text_area(label, value=valor_atual if valor_atual else "", key=key)
-                    elif tipo == "radio_com_detalhe":
-                        idx = 1 if valor_atual == "Sim" else 0
-                        novas_respostas[nome] = st.radio(label, options=["Não", "Sim"], index=idx, key=key)
-                        if novas_respostas[nome] == "Sim":
-                            val_detalhe = dados_atuais.get(f"{nome}_detalhe", "")
-                            novas_respostas[f"{nome}_detalhe"] = st.text_input(f"Especifique ({campo['label']}):", value=val_detalhe, key=f"{key}_detalhe")
+                    with cols[index % 2]:                    
+                        if tipo == "text":
+                            novas_respostas[nome] = st.text_input(label, value=valor_atual if valor_atual else "", key=key)
+                        elif tipo == "date":
+                            try:
+                                d_atual = datetime.datetime.strptime(valor_atual, "%Y-%m-%d").date() if valor_atual else datetime.date.today()
+                            except:
+                                d_atual = datetime.date.today()
+                            novas_respostas[nome] = st.date_input(label, value=d_atual, min_value=datetime.date(1990, 1, 1), max_value=datetime.date.today(), key=key)
+                        elif tipo == "number":
+                            novas_respostas[nome] = st.number_input(label, value=float(valor_atual) if valor_atual else 0.0, step=0.1, key=key)
+                        elif tipo == "selectbox":
+                            opcoes = campo.get("opcoes", [])
+                            idx = opcoes.index(valor_atual) if valor_atual in opcoes else 0
+                            novas_respostas[nome] = st.selectbox(label, options=opcoes, index=idx, key=key)
+                        elif tipo == "multiselect":
+                            opcoes = campo.get("opcoes", [])
+                            val_sel = valor_atual if isinstance(valor_atual, list) else []
+                            novas_respostas[nome] = st.multiselect(label, options=opcoes, default=val_sel, key=key)
+                        elif tipo == "textarea":
+                            novas_respostas[nome] = st.text_area(label, value=valor_atual if valor_atual else "", key=key)
+                        elif tipo == "radio_com_detalhe":
+                            idx = 1 if valor_atual == "Sim" else 0
+                            novas_respostas[nome] = st.radio(label, options=["Não", "Sim"], index=idx, key=key)
+                            if novas_respostas[nome] == "Sim":
+                                val_detalhe = dados_atuais.get(f"{nome}_detalhe", "")
+                                novas_respostas[f"{nome}_detalhe"] = st.text_input(f"Especifique ({campo['label']}):", value=val_detalhe, key=f"{key}_detalhe")
 
             st.markdown("---")
             # BOTÃO COM CONFIRMAÇÃO

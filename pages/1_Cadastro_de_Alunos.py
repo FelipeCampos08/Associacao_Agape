@@ -28,40 +28,36 @@ st.write("Preencha os dados abaixo. Campos marcados com * são obrigatórios.")
 
 # Loop para gerar a interface dinamicamente lendo o JSON
 for categoria, campos in config.items():
-    st.subheader(categoria.replace("_", " ").title())
+    st.markdown(f"### {categoria.replace('_', ' ').title()}")
     
-    for campo in campos:
+    # Cria duas colunas para colocar os campos lado a lado
+    cols = st.columns(2)
+    
+    for index, campo in enumerate(campos):
         nome = campo["nome"]
-        # Adiciona um asterisco no label se for obrigatório
         label = campo["label"] + (" *" if campo.get("obrigatorio") else "")
         tipo = campo["tipo"]
         
-        if tipo == "text":
-            respostas[nome] = st.text_input(label, key=nome)
-            
-        elif tipo == "date":
-            # Limita a data de nascimento até o dia de hoje
-            respostas[nome] = st.date_input(label, min_value=date(1990, 1, 1), max_value=date.today(), key=nome)
-            
-        elif tipo == "number":
-            respostas[nome] = st.number_input(label, min_value=0.0, step=0.1, key=nome)
-            
-        elif tipo == "selectbox":
-            respostas[nome] = st.selectbox(label, options=campo.get("opcoes", []), key=nome)
-            
-        elif tipo == "multiselect":
-            respostas[nome] = st.multiselect(label, options=campo.get("opcoes", []), key=nome)
-            
-        elif tipo == "textarea":
-            respostas[nome] = st.text_area(label, key=nome)
-            
-        elif tipo == "radio_com_detalhe":
-            # A regra de negócio: Se "Sim", abre campo de texto
-            respostas[nome] = st.radio(label, options=["Não", "Sim"], key=nome)
-            if respostas[nome] == "Sim":
-                respostas[f"{nome}_detalhe"] = st.text_input(f"Especifique ({campo['label']}):", key=f"{nome}_detalhe")
-
-st.markdown("---")
+        # O '% 2' faz a mágica de alternar entre a coluna 0 (esquerda) e 1 (direita)
+        with cols[index % 2]:
+            if tipo == "text":
+                respostas[nome] = st.text_input(label, key=nome)
+            elif tipo == "date":
+                respostas[nome] = st.date_input(label, min_value=date(1990, 1, 1), max_value=date.today(), key=nome)
+            elif tipo == "number":
+                respostas[nome] = st.number_input(label, min_value=0.0, step=0.1, key=nome)
+            elif tipo == "selectbox":
+                respostas[nome] = st.selectbox(label, options=campo.get("opcoes", []), key=nome)
+            elif tipo == "multiselect":
+                respostas[nome] = st.multiselect(label, options=campo.get("opcoes", []), key=nome)
+            elif tipo == "textarea":
+                respostas[nome] = st.text_area(label, key=nome)
+            elif tipo == "radio_com_detalhe":
+                respostas[nome] = st.radio(label, options=["Não", "Sim"], key=nome, horizontal=True)
+                if respostas[nome] == "Sim":
+                    respostas[f"{nome}_detalhe"] = st.text_input(f"Especifique ({campo['label']}):", key=f"{nome}_detalhe")
+    
+    st.markdown("---")
 
 # Botão de Salvar e Lógica de Banco de Dados
 if st.button("Salvar Cadastro", type="primary"):

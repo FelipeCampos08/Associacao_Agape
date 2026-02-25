@@ -40,8 +40,8 @@ try:
                     novo_projeto = Projeto(nome=nome_projeto.strip(), descricao=descricao.strip(), local=local.strip())
                     db.add(novo_projeto)
                     db.commit()
+                    st.toast('Ação concluída com sucesso!', icon='✅')
                     st.success(f"✅ Projeto '{nome_projeto}' cadastrado com sucesso! Agora vá na aba ao lado para abrir as turmas.")
-                    st.rerun() # Atualiza a tela para o projeto aparecer na outra aba
 
     # ==========================================
     # ABA 2: ABRIR TURMAS E PROFESSORES
@@ -124,6 +124,7 @@ try:
                             db.add(nova_turma)
                         
                         db.commit()
+                        st.toast('Ação concluída com sucesso!', icon='✅')
                         st.success(f"✅ {num_turmas} turma(s) abertas com sucesso para o projeto!")
                     except Exception as e:
                         db.rollback()

@@ -52,7 +52,24 @@ try:
 
                 with st.expander("📄 Ver Ficha de Cadastro Completa"):
                     dados_completos = json.loads(aluno.dados_cadastrais_json)
-                    st.json(dados_completos)
+                    
+                    # Formata as chaves tirando o underline e capitalizando
+                    col_f1, col_f2 = st.columns(2)
+                    itens = list(dados_completos.items())
+                    metade = len(itens) // 2
+                    
+                    with col_f1:
+                        for chave, valor in itens[:metade]:
+                            chave_limpa = chave.replace("_", " ").title()
+                            # Se for uma lista (ex: vulnerabilidades), junta com vírgula
+                            valor_limpo = ", ".join(valor) if isinstance(valor, list) else valor
+                            st.write(f"**{chave_limpa}:** {valor_limpo}")
+                            
+                    with col_f2:
+                        for chave, valor in itens[metade:]:
+                            chave_limpa = chave.replace("_", " ").title()
+                            valor_limpo = ", ".join(valor) if isinstance(valor, list) else valor
+                            st.write(f"**{chave_limpa}:** {valor_limpo}")
 
                 st.markdown("### 📚 Matrículas (Histórico)")
                 matriculas_aluno = db.query(Matricula).filter(Matricula.aluno_id == aluno.id).all()

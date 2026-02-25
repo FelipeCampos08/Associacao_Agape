@@ -43,28 +43,33 @@ try:
                     st.error("❌ E-mail ou palavra-passe incorretos.")
                     
     else:
-        st.title(f"Bem-vindo(a), {st.session_state.nome_usuario}! 🕊️")
+        st.title(f"Bem-vindo(a), {st.session_state.nome_usuario}!")
         
-        # Mostra um selinho especial se a pessoa for Administradora
         if st.session_state.get("is_admin", False):
-            st.info("🛡️ Você está logado com uma conta de **Administrador**. Acesso total liberado.")
+            st.info("🛡️ Conta de **Administrador**. Acesso total liberado.")
             
-        st.write("Utilize o menu lateral para navegar entre as funcionalidades do sistema.")
+        st.write("Selecione um dos módulos abaixo para começar os trabalhos de hoje:")
+        st.markdown("<br>", unsafe_allow_html=True) # Dá um respiro visual na tela
 
-        st.markdown("""
-        ---
-        ### 📌 Módulos Disponíveis:
-        * **Cadastro de Alunos:** Formulário para adicionar novas crianças e adolescentes.
-        * **Projetos e Turmas:** Gestão das iniciativas sociais e professores.
-        * **Matrículas:** Ecrã para alocar os alunos nas vagas disponíveis.
-        * **Pesquisa:** Painel geral para procurar dados.
-        * **Avançado:** Edição, eliminação e gestão de acessos (Restrito).
-        * **Relatórios:** Geração de PDFs para impressão.
-        """)
+        # --- MENU DE NAVEGAÇÃO EM GRID ---
+        col1, col2 = st.columns(2)
         
+        with col1:
+            st.page_link("pages/1_Cadastro_de_Alunos.py", label="Cadastro de Alunos", icon="📝")
+            st.page_link("pages/2_Cadastro_de_Projetos.py", label="Projetos e Turmas", icon="⚽")
+            st.page_link("pages/3_Matriculas.py", label="Matrículas", icon="✅")
+            
+        with col2:
+            st.page_link("pages/4_Pesquisa.py", label="Pesquisa Geral", icon="🔍")
+            st.page_link("pages/7_Relatorios.py", label="Relatórios e Impressões", icon="🖨️")
+            
+            # Esconde o botão do Avançado se não for Admin
+            if st.session_state.get("is_admin", False):
+                st.page_link("pages/5_Avancado.py", label="Administração Avançada", icon="⚙️")
+        
+        st.markdown("---")
         if st.button("Sair do Sistema (Logout)"):
             st.session_state.autenticado = False
-            # Limpa o crachá da memória ao sair
             if "is_admin" in st.session_state:
                 del st.session_state.is_admin
             st.rerun()
