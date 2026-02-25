@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import json
 import plotly.express as px
+from datetime import date
 from database import SessionLocal, Aluno, Projeto, Turma, Matricula
 
 st.set_page_config(page_title="Dashboard Ágape", page_icon="📊", layout="wide")
@@ -10,38 +11,35 @@ st.title("📊 Painel de Indicadores e Estatísticas")
 db = SessionLocal()
 
 try:
-    alunos = db.query(Aluno).all()
+    ano_atual = date.today().year
+    
+    # Filtra alunos ativos para as métricas principais
+    alunos_ativos = db.query(Aluno).filter(Aluno.status_ativo == True).all()
     projetos = db.query(Projeto).all()
-    turmas = db.query(Turma).all()
+    # Pega apenas turmas do ano atual para folha salarial
+    turmas_ano_atual = db.query(Turma).filter(Turma.ano_letivo == ano_atual).all()
     matriculas = db.query(Matricula).all()
 
-    # --- MÉTRICAS PRINCIPAIS (Kpis) ---
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Total de Alunos", len(alunos))
-    col2.metric("Projetos Ativos", len(projetos))
-    col3.metric("Turmas Abertas", len(turmas))
+    col1.metric("Alunos Ativos", len(alunos_ativos))
+    col2.metric("Projetos no Catálogo", len(projetos))
+    col3.metric(f"Turmas Abertas ({ano_atual})", len(turmas_ano_atual))
     
-    # Cálculo da Folha Salarial
-    folha_salarial = sum([p.remuneracao_professor for p in projetos if p.remuneracao_professor is not None])
-    col4.metric("Folha Salarial Mensal", f"R$ {folha_salarial:.2f}")
+    # O cálculo de salário agora é feito pelas turmas do ano!
+    folha_salarial = sum([t.remuneracao_professor for t in turmas_ano_atual if t.remuneracao_professor is not None])
+    col4.metric("Folha Salarial Mensal Estimada", f"R$ {folha_salarial:.2f}")
 
     st.markdown("---")
 
-    if alunos:
-        # Extraindo dados do JSON para análise
+    if alunos_ativos:
         dados_extraidos = []
         todas_vulnerabilidades = []
         
-        for a in alunos:
+        for a in alunos_ativos:
             dict_dados = json.loads(a.dados_cadastrais_json)
-            
-            # Pega o gênero (se não existir, coloca Não Informado)
             genero = dict_dados.get("genero", "Não Informado")
-            
-            # Pega escolaridade
             periodo = dict_dados.get("periodo", "Não Informado")
             
-            # Pega as vulnerabilidades (que é uma lista)
             vuln = dict_dados.get("vulnerabilidades", [])
             for v in vuln:
                 if v != "Nenhuma":
@@ -54,18 +52,17 @@ try:
             
         df_alunos = pd.DataFrame(dados_extraidos)
 
-        # --- GRÁFICOS ---
         col_graf1, col_graf2 = st.columns(2)
 
         with col_graf1:
-            st.subheader("Distribuição por Gênero")
+            st.subheader("Distribuição por Gênero (Ativos)")
             contagem_genero = df_alunos['Gênero'].value_counts().reset_index()
             contagem_genero.columns = ['Gênero', 'Quantidade']
             fig_genero = px.pie(contagem_genero, values='Quantidade', names='Gênero', hole=0.4, color_discrete_sequence=px.colors.qualitative.Pastel)
             st.plotly_chart(fig_genero, use_container_width=True)
 
         with col_graf2:
-            st.subheader("Período Escolar dos Alunos")
+            st.subheader("Período Escolar dos Alunos (Ativos)")
             contagem_periodo = df_alunos['Período Escolar'].value_counts().reset_index()
             contagem_periodo.columns = ['Período', 'Quantidade']
             fig_periodo = px.bar(contagem_periodo, x='Período', y='Quantidade', color='Período', text_auto=True)
@@ -73,8 +70,7 @@ try:
 
         st.markdown("---")
         
-        # Gráfico muito importante para a Psicologia/Assistência Social
-        st.subheader("⚠️ Mapa de Vulnerabilidades Sociais")
+        st.subheader("⚠️ Mapa de Vulnerabilidades Sociais (Ativos)")
         if todas_vulnerabilidades:
             df_vuln = pd.DataFrame(todas_vulnerabilidades, columns=["Vulnerabilidade"])
             contagem_vuln = df_vuln["Vulnerabilidade"].value_counts().reset_index()
@@ -88,7 +84,7 @@ try:
             st.info("Nenhuma vulnerabilidade mapeada nos alunos cadastrados até o momento.")
 
     else:
-        st.info("Cadastre alunos para visualizar os gráficos de estatísticas.")
+        st.info("Cadastre alunos ativos para visualizar os gráficos de estatísticas.")
 
 finally:
     db.close()

@@ -1,5 +1,6 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, Text, ForeignKey, Date
+from sqlalchemy import create_engine, Column, Integer, String, Float, Text, ForeignKey, Date, Boolean
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+import datetime
 
 # Cria o banco de dados local chamado 'agape.db'
 engine = create_engine('sqlite:///agape.db', echo=False)
@@ -16,9 +17,7 @@ class Aluno(Base):
     data_nascimento = Column(Date, nullable=False)
     rg = Column(String)
     cpf = Column(String)
-    
-    # Vamos armazenar todos os dados adicionais do formulário JSON como uma string (ou JSON nativo) 
-    # para não precisarmos criar 30 colunas na tabela. Isso dá flexibilidade!
+    status_ativo = Column(Boolean, default=True, nullable=False) 
     dados_cadastrais_json = Column(Text, nullable=False) 
     
     matriculas = relationship("Matricula", back_populates="aluno")
@@ -26,15 +25,11 @@ class Aluno(Base):
 class Projeto(Base):
     __tablename__ = 'projetos'
     
+    # O Projeto agora é apenas um "Guarda-chuva" (Catálogo)
     id = Column(Integer, primary_key=True, autoincrement=True)
     nome = Column(String, nullable=False, unique=True)
     descricao = Column(Text)
     local = Column(String)
-    
-    # Dados do Professor responsável
-    nome_professor = Column(String)
-    cpf_professor = Column(String)
-    remuneracao_professor = Column(Float, nullable=True) # Se for voluntário, fica nulo ou 0
     
     turmas = relationship("Turma", back_populates="projeto")
 
@@ -43,9 +38,15 @@ class Turma(Base):
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     projeto_id = Column(Integer, ForeignKey('projetos.id'))
-    nome_turma = Column(String, nullable=False) # Ex: Turma Manhã 1
+    nome_turma = Column(String, nullable=False)
     horario = Column(String, nullable=False)
     vagas_totais = Column(Integer, nullable=False)
+    ano_letivo = Column(Integer, default=datetime.date.today().year, nullable=False)
+    
+    # Dados do Professor desceram para a Turma (Execução Anual)
+    nome_professor = Column(String, nullable=False)
+    cpf_professor = Column(String)
+    remuneracao_professor = Column(Float, nullable=True)
     
     projeto = relationship("Projeto", back_populates="turmas")
     matriculas = relationship("Matricula", back_populates="turma")
@@ -61,5 +62,5 @@ class Matricula(Base):
     aluno = relationship("Aluno", back_populates="matriculas")
     turma = relationship("Turma", back_populates="matriculas")
 
-# Comando para criar as tabelas no arquivo agape.db
+# Comando para criar as tabelas
 Base.metadata.create_all(engine)
