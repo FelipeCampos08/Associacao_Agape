@@ -1,9 +1,13 @@
+import streamlit as st
 from sqlalchemy import create_engine, Column, Integer, String, Float, Text, ForeignKey, Date, Boolean
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 import datetime
 
-# Cria o banco de dados local chamado 'agape.db'
-engine = create_engine('sqlite:///agape.db', echo=False)
+# Busca a URL do banco de dados no cofre do Streamlit
+DATABASE_URL = st.secrets["DATABASE_URL"]
+
+# Cria a conexão com o PostgreSQL na nuvem
+engine = create_engine(DATABASE_URL, echo=False)
 Base = declarative_base()
 SessionLocal = sessionmaker(bind=engine)
 

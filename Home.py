@@ -12,7 +12,7 @@ db = SessionLocal()
 try:
     # --- CRIAÇÃO DO PRIMEIRO UTILIZADOR (ADMIN) ---
     if not db.query(Usuario).first():
-        senha_plana = "123".encode('utf-8')
+        senha_plana = "Agape@2026abc".encode('utf-8')
         senha_hash = bcrypt.hashpw(senha_plana, bcrypt.gensalt()).decode('utf-8')
         
         # Criamos o usuário mestre já com a tag is_admin=True
