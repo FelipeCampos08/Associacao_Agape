@@ -1,97 +1,85 @@
 import streamlit as st
 import pandas as pd
-import json
 import plotly.express as px
-from datetime import date
 from database import SessionLocal, Aluno, Projeto, Turma, Matricula
 
-st.set_page_config(page_title="Dashboard Ágape", page_icon="📊", layout="wide")
+st.set_page_config(page_title="Dashboard", page_icon="📊", layout="wide")
 
 # --- PROTEÇÃO DE ACESSO ---
 if "autenticado" not in st.session_state or not st.session_state.autenticado:
-    st.warning("⚠️ Você precisa fazer login para acessar esta página.")
-    st.stop() # Interrompe a leitura do código aqui e bloqueia a tela
+    st.warning("⚠️ Precisa de iniciar sessão para aceder a esta página.")
+    st.stop()
 # --------------------------
 
-st.title("📊 Painel de Indicadores e Estatísticas")
+st.title("📊 Painel de Indicadores (Dashboard)")
+st.write("Visão geral quantitativa dos atendimentos e projetos da Associação Ágape.")
+st.markdown("---")
 
 db = SessionLocal()
 
 try:
-    ano_atual = date.today().year
-    
-    # Filtra alunos ativos para as métricas principais
-    alunos_ativos = db.query(Aluno).filter(Aluno.status_ativo == True).all()
-    projetos = db.query(Projeto).all()
-    # Pega apenas turmas do ano atual para folha salarial
-    turmas_ano_atual = db.query(Turma).filter(Turma.ano_letivo == ano_atual).all()
-    matriculas = db.query(Matricula).all()
+    with st.spinner("Carregando indicadores..."):
+        # --- BUSCA DOS DADOS MACRO ---
+        total_alunos_ativos = db.query(Aluno).filter(Aluno.status_ativo == True).count()
+        total_projetos = db.query(Projeto).count()
+        total_turmas = db.query(Turma).count()
+        total_matriculas = db.query(Matricula).count()
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Alunos Ativos", len(alunos_ativos))
-    col2.metric("Projetos no Catálogo", len(projetos))
-    col3.metric(f"Turmas Abertas ({ano_atual})", len(turmas_ano_atual))
-    
-    # O cálculo de salário é feito pelas turmas do ano!
-    folha_salarial = sum([t.remuneracao_professor for t in turmas_ano_atual if t.remuneracao_professor is not None])
-    col4.metric("Folha Salarial Mensal Estimada", f"R$ {folha_salarial:.2f}")
-
-    st.markdown("---")
-
-    if alunos_ativos:
-        dados_extraidos = []
-        todas_vulnerabilidades = []
+        # ==========================================
+        # SEÇÃO 1: CARDS NUMÉRICOS (MÉTRICAS)
+        # ==========================================
+        col1, col2, col3, col4 = st.columns(4)
         
-        for a in alunos_ativos:
-            dict_dados = json.loads(a.dados_cadastrais_json)
-            genero = dict_dados.get("genero", "Não Informado")
-            periodo = dict_dados.get("periodo", "Não Informado")
-            
-            vuln = dict_dados.get("vulnerabilidades", [])
-            for v in vuln:
-                if v != "Nenhuma":
-                    todas_vulnerabilidades.append(v)
-            
-            dados_extraidos.append({
-                "Gênero": genero,
-                "Período Escolar": periodo
-            })
-            
-        df_alunos = pd.DataFrame(dados_extraidos)
+        col1.metric("Alunos Ativos", f"{total_alunos_ativos} 🧑‍🎓")
+        col2.metric("Projetos Cadastrados", f"{total_projetos} ⚽")
+        col3.metric("Turmas Abertas", f"{total_turmas} 🏫")
+        col4.metric("Matrículas Realizadas", f"{total_matriculas} ✅")
+        
+        st.markdown("<br>", unsafe_allow_html=True) # Respiro visual
+
+        # ==========================================
+        # SEÇÃO 2: GRÁFICOS ANALÍTICOS
+        # ==========================================
+        # Gráfico 1: Matrículas por Projeto
+        projetos = db.query(Projeto).all()
+        turmas = db.query(Turma).all()
+        matriculas = db.query(Matricula).all()
+
+        dados_grafico = []
+        for p in projetos:
+            # Pega os IDs das turmas que pertencem a este projeto
+            turmas_do_projeto = [t.id for t in turmas if t.projeto_id == p.id]
+            # Conta quantas matrículas existem nessas turmas
+            contagem = sum(1 for m in matriculas if m.turma_id in turmas_do_projeto)
+            dados_grafico.append({"Projeto": p.nome, "Matrículas": contagem})
+
+        df_projetos = pd.DataFrame(dados_grafico)
 
         col_graf1, col_graf2 = st.columns(2)
 
         with col_graf1:
-            st.subheader("Distribuição por Gênero (Ativos)")
-            contagem_genero = df_alunos['Gênero'].value_counts().reset_index()
-            contagem_genero.columns = ['Gênero', 'Quantidade']
-            fig_genero = px.pie(contagem_genero, values='Quantidade', names='Gênero', hole=0.4, color_discrete_sequence=px.colors.qualitative.Pastel)
-            st.plotly_chart(fig_genero, use_container_width=True)
+            st.subheader("Ocupação por Projeto")
+            if not df_projetos.empty and df_projetos["Matrículas"].sum() > 0:
+                # Gráfico de Barras usando Plotly (Fica com a cor laranja da Ágape)
+                fig1 = px.bar(df_projetos, x="Projeto", y="Matrículas", 
+                              color_discrete_sequence=["#F26522"],
+                              text="Matrículas")
+                fig1.update_traces(textposition='outside')
+                fig1.update_layout(xaxis_title="", yaxis_title="Nº de Alunos", margin=dict(t=20, b=20, l=0, r=0))
+                st.plotly_chart(fig1, width='content')
+            else:
+                st.info("Ainda não há matrículas suficientes para gerar este gráfico.")
 
         with col_graf2:
-            st.subheader("Período Escolar dos Alunos (Ativos)")
-            contagem_periodo = df_alunos['Período Escolar'].value_counts().reset_index()
-            contagem_periodo.columns = ['Período', 'Quantidade']
-            fig_periodo = px.bar(contagem_periodo, x='Período', y='Quantidade', color='Período', text_auto=True)
-            st.plotly_chart(fig_periodo, use_container_width=True)
-
-        st.markdown("---")
-        
-        st.subheader("⚠️ Mapa de Vulnerabilidades Sociais (Ativos)")
-        if todas_vulnerabilidades:
-            df_vuln = pd.DataFrame(todas_vulnerabilidades, columns=["Vulnerabilidade"])
-            contagem_vuln = df_vuln["Vulnerabilidade"].value_counts().reset_index()
-            contagem_vuln.columns = ["Vulnerabilidade", "Casos Identificados"]
-            
-            fig_vuln = px.bar(contagem_vuln, y='Vulnerabilidade', x='Casos Identificados', orientation='h', 
-                              color='Casos Identificados', color_continuous_scale='Reds', text_auto=True)
-            fig_vuln.update_layout(yaxis={'categoryorder':'total ascending'})
-            st.plotly_chart(fig_vuln, use_container_width=True)
-        else:
-            st.info("Nenhuma vulnerabilidade mapeada nos alunos cadastrados até o momento.")
-
-    else:
-        st.info("Cadastre alunos ativos para visualizar os gráficos de estatísticas.")
+            st.subheader("Distribuição (Proporção)")
+            if not df_projetos.empty and df_projetos["Matrículas"].sum() > 0:
+                # Gráfico de Pizza
+                fig2 = px.pie(df_projetos, names="Projeto", values="Matrículas", hole=0.4,
+                              color_discrete_sequence=px.colors.sequential.Oranges_r)
+                fig2.update_layout(margin=dict(t=20, b=20, l=0, r=0))
+                st.plotly_chart(fig2, width='content')
+            else:
+                st.info("Ainda não há matrículas suficientes para gerar este gráfico.")
 
 finally:
     db.close()

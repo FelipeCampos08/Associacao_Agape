@@ -2,6 +2,8 @@ import streamlit as st
 import bcrypt
 from database import SessionLocal, Usuario
 
+VERSION = "1.0"
+
 st.set_page_config(page_title="Início de Sessão - Sistema Ágape", page_icon="🔐", layout="centered")
 
 if "autenticado" not in st.session_state:
@@ -11,14 +13,14 @@ db = SessionLocal()
 
 try:
     # --- CRIAÇÃO DO PRIMEIRO UTILIZADOR (ADMIN) ---
-    #if not db.query(Usuario).first():
-    #    senha_plana = "minha_senha".encode('utf-8')
-    #    senha_hash = bcrypt.hashpw(senha_plana, bcrypt.gensalt()).decode('utf-8')
-    #    
-    #    # Criamos o usuário mestre já com a tag is_admin=True
-    #    admin = Usuario(nome="Administrador", email="meu_email", senha=senha_hash, is_admin=True)
-    #    db.add(admin)
-    #    db.commit()
+    if not db.query(Usuario).first():
+        senha_plana = "123".encode('utf-8')
+        senha_hash = bcrypt.hashpw(senha_plana, bcrypt.gensalt()).decode('utf-8')
+        
+        # Criamos o usuário mestre já com a tag is_admin=True
+        admin = Usuario(nome="Administrador", email="admin@agape.com", senha=senha_hash, is_admin=True)
+        db.add(admin)
+        db.commit()
 
     if not st.session_state.autenticado:
         st.title("🔐 Acesso Restrito")
@@ -73,6 +75,13 @@ try:
             if "is_admin" in st.session_state:
                 del st.session_state.is_admin
             st.rerun()
+
+        # --- MARCA D'ÁGUA / RODAPÉ ---     
+        st.markdown(f"""
+            <div style="position: fixed; bottom: 10px; right: 20px; color: #888888; font-size: 12px; z-index: 100;">
+                <b>Sistema Ágape</b> v{VERSION} | Se você começar, outros vão te acompanhar.
+            </div>
+        """, unsafe_allow_html=True)
 
 finally:
     db.close()

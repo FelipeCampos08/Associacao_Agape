@@ -93,7 +93,7 @@ try:
                     df_mat = pd.DataFrame(lista_matriculas)
                     # Ordenando do ano mais recente para o mais antigo
                     df_mat = df_mat.sort_values(by="Ano Letivo", ascending=False)
-                    st.dataframe(df_mat, use_container_width=True, hide_index=True)
+                    st.dataframe(df_mat, width='content', hide_index=True)
                 else:
                     st.warning("Este aluno não possui histórico de matrículas.")
 
@@ -143,7 +143,7 @@ try:
                     
                     df_turmas = pd.DataFrame(lista_turmas)
                     df_turmas = df_turmas.sort_values(by="Ano Letivo", ascending=False)
-                    st.dataframe(df_turmas, use_container_width=True, hide_index=True)
+                    st.dataframe(df_turmas, width='content', hide_index=True)
                     
                     st.markdown("#### 📋 Lista de Chamada")
                     opcoes_chamada = {t.id: f"{t.nome_turma} ({t.ano_letivo})" for t in turmas_proj}
