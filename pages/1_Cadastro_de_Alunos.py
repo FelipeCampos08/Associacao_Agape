@@ -3,7 +3,7 @@ import json
 from datetime import date
 from database import SessionLocal, Aluno
 
-st.set_page_config(page_title="Cadastro de Alunos", page_icon="📝")
+st.set_page_config(page_title="Cadastro de Alunos", page_icon="📝", layout="wide")
 
 # --- PROTEÇÃO DE ACESSO ---
 if "autenticado" not in st.session_state or not st.session_state.autenticado:
@@ -38,7 +38,6 @@ for categoria, campos in config.items():
         label = campo["label"] + (" *" if campo.get("obrigatorio") else "")
         tipo = campo["tipo"]
         
-        # O '% 2' faz a mágica de alternar entre a coluna 0 (esquerda) e 1 (direita)
         with cols[index % 2]:
             if tipo == "text":
                 respostas[nome] = st.text_input(label, key=nome)
@@ -107,7 +106,7 @@ if st.button("Salvar Cadastro", type="primary"):
             
             rg_digitado = respostas.get("rg", "")
             
-            # Precisamos converter a data para string para poder salvar o resto no JSON
+            # Converter a data para string para poder salvar o resto no JSON
             respostas_json_safe = respostas.copy()
             respostas_json_safe["data_nascimento"] = respostas_json_safe["data_nascimento"].strftime("%Y-%m-%d")
             dados_cadastrais_str = json_lib.dumps(respostas_json_safe, ensure_ascii=False)

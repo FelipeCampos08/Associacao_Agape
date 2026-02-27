@@ -306,7 +306,7 @@ try:
             st.write("Controle exclusivo para Administradores.")
             st.markdown("---")
             
-            # Dividimos em 3 colunas para acomodar a nova função de resetar senha
+            # 3 colunas para acomodar a nova função de resetar senha
             col_add, col_reset, col_del = st.columns(3)
             
             with col_add:

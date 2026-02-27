@@ -32,7 +32,7 @@ try:
     col2.metric("Projetos no Catálogo", len(projetos))
     col3.metric(f"Turmas Abertas ({ano_atual})", len(turmas_ano_atual))
     
-    # O cálculo de salário agora é feito pelas turmas do ano!
+    # O cálculo de salário é feito pelas turmas do ano!
     folha_salarial = sum([t.remuneracao_professor for t in turmas_ano_atual if t.remuneracao_professor is not None])
     col4.metric("Folha Salarial Mensal Estimada", f"R$ {folha_salarial:.2f}")
 

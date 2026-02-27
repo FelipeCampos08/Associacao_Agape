@@ -15,7 +15,7 @@ st.title("Matrícula de Alunos")
 db = SessionLocal()
 
 try:
-    # NOVO: Filtra apenas alunos com status_ativo == True
+    # Filtra apenas alunos com status_ativo == True
     alunos_ativos = db.query(Aluno).filter(Aluno.status_ativo == True).all()
     projetos = db.query(Projeto).all()
 
@@ -34,7 +34,7 @@ try:
     opcoes_projetos = {projeto.id: projeto.nome for projeto in projetos}
     projeto_id_selecionado = st.selectbox("Selecione o Projeto:", options=list(opcoes_projetos.keys()), format_func=lambda x: opcoes_projetos[x])
 
-    # NOVO: Filtro visual de ano letivo
+    # Filtro visual de ano letivo
     ano_filtro = st.number_input("Filtrar turmas pelo Ano Letivo:", min_value=2024, max_value=2100, value=date.today().year)
     turmas_do_projeto = db.query(Turma).filter(Turma.projeto_id == projeto_id_selecionado, Turma.ano_letivo == ano_filtro).all()
 
