@@ -11,14 +11,14 @@ db = SessionLocal()
 
 try:
     # --- CRIAÇÃO DO PRIMEIRO UTILIZADOR (ADMIN) ---
-    '''if not db.query(Usuario).first():
-        senha_plana = "minha_senha".encode('utf-8')
-        senha_hash = bcrypt.hashpw(senha_plana, bcrypt.gensalt()).decode('utf-8')
-        
-        # Criamos o usuário mestre já com a tag is_admin=True
-        admin = Usuario(nome="Administrador", email="meu_email", senha=senha_hash, is_admin=True)
-        db.add(admin)
-        db.commit()'''
+    #if not db.query(Usuario).first():
+    #    senha_plana = "minha_senha".encode('utf-8')
+    #    senha_hash = bcrypt.hashpw(senha_plana, bcrypt.gensalt()).decode('utf-8')
+    #    
+    #    # Criamos o usuário mestre já com a tag is_admin=True
+    #    admin = Usuario(nome="Administrador", email="meu_email", senha=senha_hash, is_admin=True)
+    #    db.add(admin)
+    #    db.commit()
 
     if not st.session_state.autenticado:
         st.title("🔐 Acesso Restrito")
